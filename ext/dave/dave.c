@@ -54,7 +54,7 @@ static VALUE cDave_connect(VALUE self) {
 	host = rb_iv_get(self, "@host");
 	port = rb_iv_get(self, "@port");
 
-	hostname = RSTRING(host)->ptr;
+	hostname = RSTRING_PTR(host);
 
 	if ((addr.sin_addr.s_addr = inet_addr(hostname)) == -1) {
 		hp = gethostbyname2(hostname, AF_INET);
@@ -157,13 +157,13 @@ static VALUE cDave_send(VALUE self, VALUE db, VALUE cmd) {
 	
 	daveConnection *dc;
 
-	if (RSTRING(cmd)->ptr == NULL) {
+	if (RSTRING_PTR(cmd) == NULL) {
 		return Qnil;
 	}
 
 	Data_Get_Struct(rb_iv_get(self, "@dc"), daveConnection, dc);
 
-	ret = daveWriteBytes(dc, daveDB, NUM2INT(db), 0, RSTRING(cmd)->len, RSTRING(cmd)->ptr);
+	ret = daveWriteBytes(dc, daveDB, NUM2INT(db), 0, RSTRING_LEN(cmd), RSTRING_PTR(cmd));
 	if (ret != 0) {
 		return Qnil;
 	}

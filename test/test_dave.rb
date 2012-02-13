@@ -1,6 +1,7 @@
+$:.unshift './lib'
 require 'rubygems'
 require 'eventmachine'
-require 'lib/dave'
+require 'dave'
 require 'test/unit'
 
 class DaveTest < Test::Unit::TestCase

@@ -27,7 +27,7 @@ static VALUE eMemoryError;
 static VALUE cRkeo_initialize(VALUE self, VALUE port, VALUE baud) {
 	int ret;
 	char *errorMessage = malloc(2048);
-	char *fileName = RSTRING(port)->ptr;
+	char *fileName = RSTRING_PTR(port);
 	THandle *handle;
 
 	VALUE fd;
@@ -65,32 +65,32 @@ static VALUE cRkeo_fetch(VALUE self, VALUE db, VALUE size, VALUE version) {
 	VALUE str;
 
 	THandle *handle;
-	printf("%s\n", RSTRING(version)->ptr);
+	printf("%s\n", RSTRING_PTR(version));
 
 	data = malloc(NUM2INT(size));
 	tmp = malloc(NUM2INT(size) * 8 + 1);
 
 	Data_Get_Struct(rb_iv_get(self, "@handle"), THandle, handle);
 
-	if (!strcmp(RSTRING(version)->ptr, "bytes")) {
+	if (!strcmp(RSTRING_PTR(version), "bytes")) {
 		ret = fetchRk512Dbb(handle, NUM2INT(db), 0, NUM2INT(size), data);
 		if (ret == -1) {
 			rb_raise(eConnectionError, "fetchRk512Dbb failed: %s", handle->errorMessage);
 			return Qnil;
 		}
-	} else if (!strcmp(RSTRING(version)->ptr, "words")) {
+	} else if (!strcmp(RSTRING_PTR(version), "words")) {
 		ret = fetchRk512Dbw(handle, NUM2INT(db), 0, NUM2INT(size), data);
 		if (ret == -1) {
 			rb_raise(eConnectionError, "fetchRk512Dbw failed: %s", handle->errorMessage);
 			return Qnil;
 		}
-	} else if (!strcmp(RSTRING(version)->ptr, "doubles")) {
+	} else if (!strcmp(RSTRING_PTR(version), "doubles")) {
 		ret = fetchRk512Dbd(handle, NUM2INT(db), 0, NUM2INT(size), data);
 		if (ret == -1) {
 			rb_raise(eConnectionError, "fetchRk512Dbd failed: %s", handle->errorMessage);
 			return Qnil;
 		}
-	} else if (!strcmp(RSTRING(version)->ptr, "floats")) {
+	} else if (!strcmp(RSTRING_PTR(version), "floats")) {
 		ret = fetchRk512DbReal(handle, NUM2INT(db), 0, NUM2INT(size), data);
 		if (ret == -1) {
 			rb_raise(eConnectionError, "fetchRk512DbReal failed: %s", handle->errorMessage);
@@ -126,39 +126,39 @@ static VALUE cRkeo_send(VALUE self, VALUE db, VALUE cmd, VALUE version) {
 
 	THandle *handle;
 
-	if (RSTRING(cmd)->ptr == NULL) {
+	if (RSTRING_PTR(cmd) == NULL) {
 		rb_raise(eArgumentError, "cmd not specified");
 		return Qnil;
 	}
 
-	if (RSTRING(version)->ptr == NULL) {
+	if (RSTRING_PTR(version) == NULL) {
 		rb_raise(eArgumentError, "version not specified");
 		return Qnil;
 	}
 
 	Data_Get_Struct(rb_iv_get(self, "@handle"), THandle, handle);
-	size = INT2NUM(RSTRING(cmd)->len);
+	size = INT2NUM(RSTRING_LEN(cmd));
 
-	if (!strcmp(RSTRING(version)->ptr, "bytes")) {
-		ret = sendRk512Dbb(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING(cmd)->ptr);
+	if (!strcmp(RSTRING_PTR(version), "bytes")) {
+		ret = sendRk512Dbb(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING_PTR(cmd));
 		if (ret == -1) {
 			rb_raise(eConnectionError, "sendRk512Dbb failed: %s", handle->errorMessage);
 			return Qnil;
 		}
-	} else if (!strcmp(RSTRING(version)->ptr, "words")) {
-		ret = sendRk512Dbw(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING(cmd)->ptr);
+	} else if (!strcmp(RSTRING_PTR(version), "words")) {
+		ret = sendRk512Dbw(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING_PTR(cmd));
 		if (ret == -1) {
 			rb_raise(eConnectionError, "sendRk512Dbw failed: %s", handle->errorMessage);
 			return Qnil;
 		}
-	} else if (!strcmp(RSTRING(version)->ptr, "doubles")) {
-		ret = sendRk512Dbd(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING(cmd)->ptr);
+	} else if (!strcmp(RSTRING_PTR(version), "doubles")) {
+		ret = sendRk512Dbd(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING_PTR(cmd));
 		if (ret == -1) {
 			rb_raise(eConnectionError, "sendRk512Dbd failed: %s", handle->errorMessage);
 			return Qnil;
 		}
-	} else if (!strcmp(RSTRING(version)->ptr, "floats")) {
-		ret = sendRk512DbReal(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING(cmd)->ptr);
+	} else if (!strcmp(RSTRING_PTR(version), "floats")) {
+		ret = sendRk512DbReal(handle, NUM2INT(db), 0, NUM2INT(size), RSTRING_PTR(cmd));
 		if (ret == -1) {
 			rb_raise(eConnectionError, "sendRk512DbReal failed: %s", handle->errorMessage);
 			return Qnil;
