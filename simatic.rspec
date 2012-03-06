@@ -1,0 +1,29 @@
+$:.unshift './lib'
+require 'rspec'
+require 'simatic'
+require 'dave'
+
+describe Dave do
+  let(:plc) { Dave.new "127.0.0.1", 102 }
+
+  it "should connect to the PLC" do
+    plc.connect.should be_true
+  end
+
+  it "should fetch data" do
+    plc.connect.should be_true
+    plc.fetch(5,1).should_not equal nil
+    plc.fetch(5,1).length.should equal 8
+  end
+
+  it "should send data" do
+    plc.connect.should be_true
+    plc.send(6, "\0\0").should be_true
+    plc.send(6, "\xff\xff").should be_true
+  end
+
+  it "should raise SocketError" do
+    plc = Dave.new "127.0.0.1", 65000
+    lambda { plc.connect }.should raise_error(SocketError)
+  end
+end
