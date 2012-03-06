@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "simatic"
-  s.version     = "0.0.1"
+  s.version     = "0.0.2"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Kiril Kirov"]
   s.email       = ["kiril@kirov.be"]
@@ -13,13 +13,12 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--main", "README.md"]
 
   s.add_dependency 'rake'
-  s.add_dependency 'rake-compiler'
   s.add_dependency 'bitstring'
 
   s.add_development_dependency 'rspec', '>= 2.5.0'
+  s.add_development_dependency 'rake-compiler'
 
   s.files         = `git ls-files`.split("\n")
   s.extensions    = ["ext/dave/extconf.rb", "ext/rkeo/extconf.rb"]
-  s.test_files    = `git ls-files -- test/*`.split("\n")
   s.require_paths = ["lib"]
 end
