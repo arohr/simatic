@@ -78,6 +78,7 @@ static VALUE cDave_connect(VALUE self) {
   addrlen = sizeof(addr);
   ret = connect(fd, (struct sockaddr *)&addr, addrlen);
   if (ret < 0) {
+    close(fd);
     rb_raise(eConnectionError, "connect failed: %d", ret);
     return Qnil;
   }
@@ -85,6 +86,7 @@ static VALUE cDave_connect(VALUE self) {
   opt = 1;
   ret = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, 4);
   if (ret < 0) {
+    close(fd);
     rb_raise(eConnectionError, "setsockopt failed: %d", ret);
     return Qnil;
   }
@@ -98,6 +100,8 @@ static VALUE cDave_connect(VALUE self) {
   ret = daveConnectPLC(dc);
 
   if (ret < 0) {
+    close(fd);
+    free(fds);
     rb_raise(eConnectionError, "daveConnectPLC failed: %d", ret);
     return Qnil;
   }
@@ -105,9 +109,35 @@ static VALUE cDave_connect(VALUE self) {
   rb_iv_set(self, "@fds", Data_Wrap_Struct(rb_cObject, 0, dave_free_fds, fds));
   rb_iv_set(self, "@di", Data_Wrap_Struct(rb_cObject, 0, dave_free_di, di));
   rb_iv_set(self, "@dc", Data_Wrap_Struct(rb_cObject, 0, dave_free_dc, dc));
+  rb_iv_set(self, "@connected", Qtrue);
 
   return Qtrue;
 }
+
+
+/*
+* True if is connected
+*/
+static VALUE cDave_connected(VALUE self) {
+  VALUE connected;
+  connected = rb_iv_get(self, "@connected");
+  return connected;
+}
+
+
+/*
+ * Disconnect from the PLC
+ */
+static VALUE cDave_disconnect(VALUE self) {
+  _daveOSserialType *fds;
+
+  Data_Get_Struct(rb_iv_get(self, "@fds"), _daveOSserialType, fds);
+  close(fds->rfd);
+  rb_iv_set(self, "@connected", Qfalse);
+
+  return Qtrue;
+}
+
 
 /*
  * Read
@@ -198,6 +228,8 @@ void Init_dave() {
 
   rb_define_method(rb_cDave, "initialize", cDave_initialize, 2);
   rb_define_method(rb_cDave, "connect", cDave_connect, 0);
+  rb_define_method(rb_cDave, "connected?", cDave_connected, 0);
+  rb_define_method(rb_cDave, "disconnect", cDave_disconnect, 0);
   rb_define_method(rb_cDave, "fetch", cDave_fetch, 2);
   rb_define_method(rb_cDave, "send", cDave_send, 2);
 }

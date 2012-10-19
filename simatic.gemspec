@@ -3,11 +3,11 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "simatic"
-  s.version     = "0.0.2"
+  s.version     = "0.0.3"
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Kiril Kirov"]
-  s.email       = ["kiril@kirov.be"]
-  s.homepage    = "https://github.com/kirilk/simatic"
+  s.authors     = ["Kiril Kirov", "Andy Rohr"]
+  s.email       = ["kiril@kirov.be", "andy.rohr@mindclue.ch"]
+  s.homepage    = "https://github.com/arohr/simatic"
   s.summary     = %q{A Ruby communication library for Siemens Simatic S7 PLCs}
   s.description = %q{A Ruby communication library for Siemens Simatic S7 PLCs}
   s.rdoc_options = ["--main", "README.md"]
