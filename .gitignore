@@ -1,4 +1,7 @@
 .idea
 .ruby-gemset
 .ruby-version
+lib/*.so
+*.gem
+tmp/
 Gemfile.lock

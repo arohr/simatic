@@ -16,7 +16,8 @@ require 'rubygems'
 require 'simatic'
 require 'dave'
 
-dave = Dave.new '10.1.2.3', 102
+# connect to 10.1.2.3:102 and use slot 2 (eg. S7-300). Use slot 0 for S7-1200.
+dave = Dave.new '10.1.2.3', 102, 2
 
 loop do
 

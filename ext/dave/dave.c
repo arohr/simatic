@@ -26,9 +26,10 @@ void dave_free_fds(void *);
 /*
  * Constructor
  */
-static VALUE cDave_initialize(VALUE self, VALUE host, VALUE port) {
+static VALUE cDave_initialize(VALUE self, VALUE host, VALUE port, VALUE slot) {
   rb_iv_set(self, "@host", host);
   rb_iv_set(self, "@port", port);
+  rb_iv_set(self, "@slot", slot); // slot is configurable (eg. 2 for S7-300 or 0 for S7-1200)
   return Qtrue;
 }
 
@@ -50,9 +51,11 @@ static VALUE cDave_connect(VALUE self) {
 
   VALUE host;
   VALUE port;
+  VALUE slot;
 
   host = rb_iv_get(self, "@host");
   port = rb_iv_get(self, "@port");
+  slot = rb_iv_get(self, "@slot");
 
   hostname = RSTRING_PTR(host);
 
@@ -96,7 +99,7 @@ static VALUE cDave_connect(VALUE self) {
 
   di = daveNewInterface(*fds, "IF1", 0, daveProtoISOTCP, daveSpeed187k);
   daveSetTimeout(di, 5000000);
-  dc = daveNewConnection(di, 2, 0, 2);
+  dc = daveNewConnection(di, 2, 0, slot);
   ret = daveConnectPLC(dc);
 
   if (ret < 0) {
@@ -226,7 +229,7 @@ void Init_dave() {
 
   eConnectionError = rb_const_get(rb_cObject, rb_intern("SocketError"));
 
-  rb_define_method(rb_cDave, "initialize", cDave_initialize, 2);
+  rb_define_method(rb_cDave, "initialize", cDave_initialize, 3);
   rb_define_method(rb_cDave, "connect", cDave_connect, 0);
   rb_define_method(rb_cDave, "connected?", cDave_connected, 0);
   rb_define_method(rb_cDave, "disconnect", cDave_disconnect, 0);
