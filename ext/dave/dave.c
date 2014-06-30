@@ -99,7 +99,7 @@ static VALUE cDave_connect(VALUE self) {
 
   di = daveNewInterface(*fds, "IF1", 0, daveProtoISOTCP, daveSpeed187k);
   daveSetTimeout(di, 5000000);
-  dc = daveNewConnection(di, 2, 0, slot);
+  dc = daveNewConnection(di, 2, 0, NUM2INT(slot));
   ret = daveConnectPLC(dc);
 
   if (ret < 0) {
