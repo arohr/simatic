@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #include <netdb.h>
 #include <unistd.h>
@@ -19,14 +20,27 @@ static VALUE rb_cDave;
 static VALUE rb_mSimatic;
 static VALUE eConnectionError;
 
+static sigset_t signal_mask;
+
 void dave_free_di(void *);
 void dave_free_dc(void *);
 void dave_free_fds(void *);
+void block_signals();
+void unblock_signals();
 
 /*
  * Constructor
  */
 static VALUE cDave_initialize(VALUE self, VALUE host, VALUE port, VALUE slot) {
+  // Setup signal mask for blocking SIGVTALRM
+  // In some scenarios the singal SIGVTALRM can sometimes hit the ruby process
+  // with sigreturn EINTR (you can see this using strace). If this signal hits
+  // the ruby process during a select() syscall (eg. in _daveReadISOPacket() )
+  // libnodave will return the error -1025 (timeout), which is wrong. Thus we
+  // need to block this signal during fetch() and send() calls.
+  sigemptyset (&signal_mask);
+  sigaddset (&signal_mask, SIGVTALRM);
+
   rb_iv_set(self, "@host", host);
   rb_iv_set(self, "@port", port);
   rb_iv_set(self, "@slot", slot); // slot is configurable (eg. 2 for S7-300 or 0 for S7-1200)
@@ -99,6 +113,7 @@ static VALUE cDave_connect(VALUE self) {
 
   di = daveNewInterface(*fds, "IF1", 0, daveProtoISOTCP, daveSpeed187k);
   daveSetTimeout(di, 5000000);
+//  daveSetDebug(0x1ffff);
   dc = daveNewConnection(di, 2, 0, NUM2INT(slot));
   ret = daveConnectPLC(dc);
 
@@ -152,6 +167,8 @@ static VALUE cDave_fetch(VALUE self, VALUE db, VALUE size) {
   char *tmp;
   VALUE bs, str;
 
+  block_signals();
+
   daveConnection *dc;
   Data_Get_Struct(rb_iv_get(self, "@dc"), daveConnection, dc);
 
@@ -180,6 +197,8 @@ static VALUE cDave_fetch(VALUE self, VALUE db, VALUE size) {
 
   free(tmp);
 
+  unblock_signals();
+
   return bs;
 }
 
@@ -188,6 +207,8 @@ static VALUE cDave_fetch(VALUE self, VALUE db, VALUE size) {
  */
 static VALUE cDave_send(VALUE self, VALUE db, VALUE cmd) {
   int ret;
+
+  block_signals();
 
   daveConnection *dc;
 
@@ -201,6 +222,8 @@ static VALUE cDave_send(VALUE self, VALUE db, VALUE cmd) {
   if (ret != 0) {
     return Qnil;
   }
+
+  unblock_signals();
 
   return Qtrue;
 }
@@ -217,6 +240,20 @@ void dave_free_fds(void *p) {
   _daveOSserialType *fds = p;
   close(fds->rfd);
   free(fds);
+}
+
+void block_signals() {
+  int rc = sigprocmask (SIG_BLOCK, &signal_mask, NULL);
+  if (rc != 0) {
+    fprintf(stdout, "Error in block_signals\n");
+  }
+}
+
+void unblock_signals() {
+  int rc = sigprocmask (SIG_UNBLOCK, &signal_mask, NULL);
+  if (rc != 0) {
+    fprintf(stdout, "Error in unblock_signals\n");
+  }
 }
 
 void Init_dave() {
